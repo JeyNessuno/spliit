@@ -8,9 +8,10 @@ type Props = {
   balances: Balances
   participants: Participant[]
   currency: Currency
+  activeUserId?: string
 }
 
-export function BalancesList({ balances, participants, currency }: Props) {
+export function BalancesList({ balances, participants, currency, activeUserId }: Props) {
   const locale = useLocale()
   const maxBalance = Math.max(
     ...Object.values(balances).map((b) => Math.abs(b.total)),
@@ -24,22 +25,26 @@ export function BalancesList({ balances, participants, currency }: Props) {
         return (
           <div
             key={participant.id}
-            className={cn('flex', isLeft || 'flex-row-reverse')}
+            className={cn(
+              'flex border-t border-border/60 first:border-t-0',
+              isLeft || 'flex-row-reverse',
+            )}
           >
-            <div className={cn('w-1/2 p-2', isLeft && 'text-right')}>
+            <div className={cn('w-1/2 py-3 pr-3', isLeft && 'text-right')}>
               {participant.name}
+              {activeUserId === participant.id && ' (you)'}
             </div>
             <div className={cn('w-1/2 relative', isLeft || 'text-right')}>
-              <div className="absolute inset-0 p-2 z-20">
+              <div className="absolute inset-0 z-20 py-3">
                 {formatCurrency(currency, balance, locale)}
               </div>
               {balance !== 0 && (
                 <div
                   className={cn(
-                    'absolute top-1 h-7 z-10',
+                    'absolute top-2 h-8 z-10',
                     isLeft
-                      ? 'bg-green-200 dark:bg-green-800 left-0 rounded-r-lg border border-green-300 dark:border-green-700'
-                      : 'bg-red-200 dark:bg-red-800 right-0 rounded-l-lg border  border-red-300 dark:border-red-700',
+                      ? 'left-0 rounded-r-full bg-primary/25'
+                      : 'right-0 rounded-l-full bg-muted',
                   )}
                   style={{
                     width: (Math.abs(balance) / maxBalance) * 100 + '%',

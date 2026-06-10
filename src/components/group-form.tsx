@@ -24,24 +24,35 @@ import {
 } from '@/components/ui/hover-card'
 import { Input } from '@/components/ui/input'
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+  Command,
+  CommandEmpty,
+  CommandInput,
+  CommandItem,
+} from '@/components/ui/command'
+import {
+  Drawer,
+  DrawerContent,
+  DrawerTrigger,
+} from '@/components/ui/drawer'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover'
 import { Locale } from '@/i18n/request'
 import { getGroup } from '@/lib/api'
 import { defaultCurrencyList, getCurrency } from '@/lib/currency'
 import { GroupFormValues, groupFormSchema } from '@/lib/schemas'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Save, Trash2 } from 'lucide-react'
+import { ChevronDown, Save, Trash2 } from 'lucide-react'
 import { useLocale, useTranslations } from 'next-intl'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { useFieldArray, useForm } from 'react-hook-form'
 import { CurrencySelector } from './currency-selector'
+import { ShareButton } from '@/app/groups/[groupId]/share-button'
 import { Textarea } from './ui/textarea'
+import { useMediaQuery } from '@/lib/hooks'
 
 export type Props = {
   group?: NonNullable<Awaited<ReturnType<typeof getGroup>>>
@@ -73,11 +84,11 @@ export function GroupForm({
           name: '',
           information: '',
           currency: '',
-          currencyCode: process.env.NEXT_PUBLIC_DEFAULT_CURRENCY_CODE || 'USD', // TODO: If NEXT_PUBLIC_DEFAULT_CURRENCY_CODE, is not set, determine the default currency code based on locale
+          currencyCode: 'EUR',
           participants: [
-            { name: t('Participants.John') },
-            { name: t('Participants.Jane') },
-            { name: t('Participants.Jack') },
+            { name: 'Jey' },
+            { name: 'Pit' },
+            { name: 'Mr Beans' },
           ],
         },
   })
@@ -88,6 +99,8 @@ export function GroupForm({
   })
 
   const [activeUser, setActiveUser] = useState<string | null>(null)
+  const [participantValue, setParticipantValue] = useState<string>('')
+
   useEffect(() => {
     if (activeUser === null) {
       const currentActiveUser =
@@ -97,6 +110,12 @@ export function GroupForm({
       setActiveUser(currentActiveUser)
     }
   }, [t, activeUser, fields, group?.id])
+
+  useEffect(() => {
+    if (activeUser !== null) {
+      setParticipantValue(activeUser)
+    }
+  }, [activeUser])
 
   const updateActiveUser = () => {
     if (!activeUser) return
@@ -123,11 +142,11 @@ export function GroupForm({
           )
         })}
       >
-        <Card className="mb-4">
+        <Card>
           <CardHeader>
             <CardTitle>{t('title')}</CardTitle>
           </CardHeader>
-          <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <CardContent className="grid grid-cols-1 gap-5 sm:grid-cols-2">
             <FormField
               control={form.control}
               name="name"
@@ -149,6 +168,28 @@ export function GroupForm({
               )}
             />
 
+            <div className="sm:col-span-2">
+              <FormField
+                control={form.control}
+                name="information"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t('InformationField.label')}</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        rows={3}
+                        className="text-base"
+                        {...field}
+                        placeholder={t('InformationField.placeholder')}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+
             <FormField
               control={form.control}
               name="currencyCode"
@@ -156,11 +197,8 @@ export function GroupForm({
                 <FormItem>
                   <FormLabel>{t('CurrencyCodeField.label')}</FormLabel>
                   <CurrencySelector
-                    currencies={defaultCurrencyList(
-                      locale as Locale,
-                      t('CurrencyCodeField.customOption'),
-                    )}
-                    defaultValue={form.watch(field.name) ?? ''}
+                    currencies={defaultCurrencyList(locale as Locale)}
+                    defaultValue={form.watch(field.name) ?? 'EUR'}
                     onValueChange={(newCurrency) => {
                       field.onChange(newCurrency)
                       const currency = getCurrency(newCurrency)
@@ -209,31 +247,10 @@ export function GroupForm({
                 </FormItem>
               )}
             />
-
-            <div className="col-span-2">
-              <FormField
-                control={form.control}
-                name="information"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t('InformationField.label')}</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        rows={2}
-                        className="text-base"
-                        {...field}
-                        placeholder={t('InformationField.placeholder')}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
           </CardContent>
         </Card>
 
-        <Card className="mb-4">
+        <Card>
           <CardHeader>
             <CardTitle>{t('Participants.title')}</CardTitle>
             <CardDescription>{t('Participants.description')}</CardDescription>
@@ -299,9 +316,10 @@ export function GroupForm({
               ))}
             </ul>
           </CardContent>
-          <CardFooter>
+          <CardFooter className="flex flex-col gap-3">
             <Button
               variant="secondary"
+              className="w-full"
               onClick={() => {
                 append({ name: '' })
               }}
@@ -309,71 +327,138 @@ export function GroupForm({
             >
               {t('Participants.add')}
             </Button>
+            {group && (
+              <div className="flex justify-end">
+                <ShareButton group={group} />
+              </div>
+            )}
           </CardFooter>
         </Card>
 
-        <Card className="mb-4">
+        <Card>
           <CardHeader>
-            <CardTitle>{t('Settings.title')}</CardTitle>
-            <CardDescription>{t('Settings.description')}</CardDescription>
+            <CardTitle>Who are you?</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid sm:grid-cols-2 gap-4">
+            <div className="grid gap-5 sm:grid-cols-2">
               {activeUser !== null && (
                 <FormItem>
-                  <FormLabel>{t('Settings.ActiveUserField.label')}</FormLabel>
+                  <FormLabel>Who are you?</FormLabel>
                   <FormControl>
-                    <Select
+                    <ParticipantSelector
+                      participants={[
+                        { name: t('Settings.ActiveUserField.none') },
+                        ...form.watch('participants'),
+                      ].filter((item) => item.name.length > 0)}
+                      defaultValue={participantValue}
                       onValueChange={(value) => {
                         setActiveUser(value)
                       }}
-                      defaultValue={activeUser}
-                    >
-                      <SelectTrigger>
-                        <SelectValue
-                          placeholder={t(
-                            'Settings.ActiveUserField.placeholder',
-                          )}
-                        />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {[
-                          { name: t('Settings.ActiveUserField.none') },
-                          ...form.watch('participants'),
-                        ]
-                          .filter((item) => item.name.length > 0)
-                          .map(({ name }) => (
-                            <SelectItem key={name} value={name}>
-                              {name}
-                            </SelectItem>
-                          ))}
-                      </SelectContent>
-                    </Select>
+                    />
                   </FormControl>
-                  <FormDescription>
-                    {t('Settings.ActiveUserField.description')}
-                  </FormDescription>
+                  <FormMessage />
                 </FormItem>
               )}
             </div>
           </CardContent>
         </Card>
 
-        <div className="flex mt-4 gap-2">
+        <div className="sticky bottom-0 z-40 mt-0 flex gap-2 border-t border-border/70 bg-background/95 p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] backdrop-blur-xl sm:rounded-b-2xl sm:border-x">
           <SubmitButton
+            className="flex-1"
             loadingContent={t(group ? 'Settings.saving' : 'Settings.creating')}
             onClick={updateActiveUser}
           >
-            <Save className="w-4 h-4 mr-2" />{' '}
+            <Save className="w-4 h-4 mr-2" />
             {t(group ? 'Settings.save' : 'Settings.create')}
           </SubmitButton>
           {!group && (
-            <Button variant="ghost" asChild>
+            <Button variant="ghost" asChild className="flex-1">
               <Link href="/groups">{t('Settings.cancel')}</Link>
             </Button>
           )}
         </div>
       </form>
     </Form>
+  )
+}
+
+function ParticipantSelector({
+  participants,
+  defaultValue,
+  onValueChange,
+}: {
+  participants: { name: string }[]
+  defaultValue: string
+  onValueChange: (value: string) => void
+}) {
+  const [open, setOpen] = useState(false)
+  const [value, setValue] = useState(defaultValue)
+  const isDesktop = useMediaQuery('(min-width: 768px)')
+  const t = useTranslations('GroupForm')
+
+  useEffect(() => {
+    if (defaultValue !== value) {
+      setValue(defaultValue)
+    }
+  }, [defaultValue, value])
+
+  const selectedParticipant =
+    participants.find((participant) => participant.name === value) ?? participants[0]
+
+  const selectorContent = (
+    <Command>
+      <CommandInput placeholder="Search participants" className="text-base" />
+      <CommandEmpty>No participants found</CommandEmpty>
+      {participants.map((participant) => (
+        <CommandItem
+          key={participant.name}
+          value={participant.name}
+          onSelect={() => {
+            setValue(participant.name)
+            onValueChange(participant.name)
+            setOpen(false)
+          }}
+        >
+          {participant.name}
+        </CommandItem>
+      ))}
+    </Command>
+  )
+
+  return isDesktop ? (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          variant="outline"
+          role="combobox"
+          aria-expanded={open}
+          className="flex w-full justify-between"
+        >
+          {selectedParticipant?.name ?? 'Select yourself'}
+          <ChevronDown className="ml-2 h-4 w-4 opacity-50" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="p-0" align="start">
+        {selectorContent}
+      </PopoverContent>
+    </Popover>
+  ) : (
+    <Drawer open={open} onOpenChange={setOpen}>
+      <DrawerTrigger asChild>
+        <Button
+          variant="outline"
+          role="combobox"
+          aria-expanded={open}
+          className="flex w-full justify-between"
+        >
+          {selectedParticipant?.name ?? 'Select yourself'}
+          <ChevronDown className="ml-2 h-4 w-4 opacity-50" />
+        </Button>
+      </DrawerTrigger>
+      <DrawerContent className="p-0">
+        {selectorContent}
+      </DrawerContent>
+    </Drawer>
   )
 }

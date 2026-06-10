@@ -339,7 +339,12 @@ export async function getCategories() {
 
 export async function getGroupExpenses(
   groupId: string,
-  options?: { offset?: number; length?: number; filter?: string },
+  options?: {
+    offset?: number
+    length?: number
+    filter?: string
+    excludeReimbursements?: boolean
+  },
 ) {
   await createRecurringExpenses()
 
@@ -368,6 +373,7 @@ export async function getGroupExpenses(
       title: options?.filter
         ? { contains: options.filter, mode: 'insensitive' }
         : undefined,
+      isReimbursement: options?.excludeReimbursements ? false : undefined,
     },
     orderBy: [{ expenseDate: 'desc' }, { createdAt: 'desc' }],
     skip: options && options.offset,

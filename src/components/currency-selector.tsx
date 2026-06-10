@@ -25,6 +25,9 @@ type Props = {
   /** Currency code to be selected by default. Overwriting this value will update current selection, too. */
   defaultValue: Currency['code']
   isLoading: boolean
+  className?: string
+  /** Show only the flag, hide currency name and code */
+  flagOnly?: boolean
 }
 
 export function CurrencySelector({
@@ -32,6 +35,8 @@ export function CurrencySelector({
   onValueChange,
   defaultValue,
   isLoading,
+  className,
+  flagOnly,
 }: Props) {
   const [open, setOpen] = useState(false)
   const [value, setValue] = useState<string>(defaultValue)
@@ -45,6 +50,7 @@ export function CurrencySelector({
 
   const selectedCurrency =
     currencies.find((currency) => (currency.code ?? '') === value) ??
+    currencies.find((currency) => currency.code === 'EUR') ??
     currencies[0]
 
   if (isDesktop) {
@@ -52,9 +58,11 @@ export function CurrencySelector({
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <CurrencyButton
+            className={className}
             currency={selectedCurrency}
             open={open}
             isLoading={isLoading}
+            flagOnly={flagOnly}
           />
         </PopoverTrigger>
         <PopoverContent className="p-0" align="start">
@@ -75,9 +83,11 @@ export function CurrencySelector({
     <Drawer open={open} onOpenChange={setOpen}>
       <DrawerTrigger asChild>
         <CurrencyButton
+          className={className}
           currency={selectedCurrency}
           open={open}
           isLoading={isLoading}
+          flagOnly={flagOnly}
         />
       </DrawerTrigger>
       <DrawerContent className="p-0">
@@ -107,7 +117,6 @@ function CurrencyCommand({
       case 'EUR':
       case 'JPY':
       case 'GBP':
-      case 'CNY':
         return 'common'
       default:
         if (currency.code === '') return 'custom'
@@ -156,10 +165,11 @@ type CurrencyButtonProps = {
   currency: Currency
   open: boolean
   isLoading: boolean
+  flagOnly?: boolean
 }
 const CurrencyButton = forwardRef<HTMLButtonElement, CurrencyButtonProps>(
   (
-    { currency, open, isLoading, ...props }: ButtonProps & CurrencyButtonProps,
+    { currency, open, isLoading, flagOnly, ...props }: ButtonProps & CurrencyButtonProps,
     ref,
   ) => {
     const iconClassName = 'ml-2 h-4 w-4 shrink-0 opacity-50'
@@ -168,26 +178,30 @@ const CurrencyButton = forwardRef<HTMLButtonElement, CurrencyButtonProps>(
         variant="outline"
         role="combobox"
         aria-expanded={open}
-        className="flex w-full justify-between"
+        className={flagOnly ? 'h-12 w-12 p-0' : 'flex w-full justify-between'}
         ref={ref}
         {...props}
       >
-        <CurrencyLabel currency={currency} />
-        {isLoading ? (
-          <Loader2 className={`animate-spin ${iconClassName}`} />
-        ) : (
-          <ChevronDown className={iconClassName} />
-        )}
+        <CurrencyLabel currency={currency} flagOnly={flagOnly} />
+        {!flagOnly &&
+          (isLoading ? (
+            <Loader2 className={`animate-spin ${iconClassName}`} />
+          ) : (
+            <ChevronDown className={iconClassName} />
+          ))}
       </Button>
     )
   },
 )
 CurrencyButton.displayName = 'CurrencyButton'
 
-function CurrencyLabel({ currency }: { currency: Currency }) {
+function CurrencyLabel({ currency, flagOnly }: { currency: Currency; flagOnly?: boolean }) {
   const flagUrl = `https://flagcdn.com/h24/${
     currency?.code.length ? currency.code.slice(0, 2).toLowerCase() : 'un'
   }.png`
+  if (flagOnly) {
+    return <img src={flagUrl} className="w-6 h-6" alt="" />
+  }
   return (
     <div className="flex items-center gap-3">
       <img src={flagUrl} className="w-4" alt="" />

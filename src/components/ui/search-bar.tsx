@@ -21,12 +21,12 @@ const SearchBar = React.forwardRef<HTMLInputElement, InputProps>(
     }
 
     return (
-      <div className="mx-4 sm:mx-6 flex relative">
+      <div className="mx-4 flex relative sm:mx-5">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
         <Input
           type={type}
           className={cn(
-            'pl-10 text-sm focus:text-base bg-muted border-none text-muted-foreground',
+            'pl-10 text-sm text-foreground placeholder:text-muted-foreground',
             className,
           )}
           ref={ref}

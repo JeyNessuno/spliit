@@ -10,6 +10,7 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
+import { useActiveUser } from '@/lib/hooks'
 import { getCurrencyFromGroup } from '@/lib/utils'
 import { trpc } from '@/trpc/client'
 import { useTranslations } from 'next-intl'
@@ -20,6 +21,7 @@ import { useCurrentGroup } from '../current-group-context'
 export default function BalancesAndReimbursements() {
   const utils = trpc.useUtils()
   const { groupId, group } = useCurrentGroup()
+  const activeUserId = useActiveUser(groupId)
   const { data: balancesData, isLoading: balancesAreLoading } =
     trpc.groups.balances.list.useQuery({
       groupId,
@@ -36,7 +38,7 @@ export default function BalancesAndReimbursements() {
 
   return (
     <>
-      <Card className="mb-4">
+      <Card>
         <CardHeader>
           <CardTitle>{t('title')}</CardTitle>
           <CardDescription>{t('description')}</CardDescription>
@@ -49,11 +51,12 @@ export default function BalancesAndReimbursements() {
               balances={balancesData.balances}
               participants={group?.participants}
               currency={getCurrencyFromGroup(group)}
+              activeUserId={activeUserId}
             />
           )}
         </CardContent>
       </Card>
-      <Card className="mb-4">
+      <Card>
         <CardHeader>
           <CardTitle>{t('Reimbursements.title')}</CardTitle>
           <CardDescription>{t('Reimbursements.description')}</CardDescription>
@@ -69,6 +72,7 @@ export default function BalancesAndReimbursements() {
               participants={group?.participants}
               currency={getCurrencyFromGroup(group)}
               groupId={groupId}
+              activeUserId={activeUserId}
             />
           )}
         </CardContent>

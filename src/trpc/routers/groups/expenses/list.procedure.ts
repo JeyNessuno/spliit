@@ -16,6 +16,7 @@ export const listGroupExpensesProcedure = baseProcedure
       offset: cursor,
       length: limit + 1,
       filter,
+      excludeReimbursements: true,
     })
     return {
       expenses: expenses.slice(0, limit).map((expense) => ({

@@ -45,25 +45,9 @@ export const supportedCurrencyCodes = [
 ] as const
 export type supportedCurrencyCodeType = (typeof supportedCurrencyCodes)[number]
 
-export function defaultCurrencyList(
-  locale: Locale = 'en-US',
-  customChoice: string | null = null,
-) {
-  const currencies = customChoice
-    ? [
-        {
-          name: customChoice,
-          symbol_native: '',
-          symbol: '',
-          code: '',
-          name_plural: customChoice,
-          rounding: 0,
-          decimal_digits: 2,
-        },
-      ]
-    : []
+export function defaultCurrencyList(locale: Locale = 'en-US') {
   const allCurrencies = currencyList[locale]
-  return currencies.concat(Object.values(allCurrencies))
+  return Object.values(allCurrencies)
 }
 
 export function getCurrency(

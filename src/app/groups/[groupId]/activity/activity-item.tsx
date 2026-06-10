@@ -57,7 +57,7 @@ export function ActivityItem({
   return (
     <div
       className={cn(
-        'flex justify-between sm:rounded-lg px-2 sm:pr-1 sm:pl-2 py-2 text-sm hover:bg-accent gap-1 items-stretch',
+        'flex items-stretch justify-between gap-3 border-t border-border/60 px-0 py-3 text-sm transition-colors hover:bg-accent/50 sm:px-2',
         expenseExists && 'cursor-pointer',
       )}
       onClick={() => {

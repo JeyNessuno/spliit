@@ -158,12 +158,12 @@
       "attachDescription": "See and attach receipts to the income."
     },
     "Expense": {
-      "create": "Create expense",
-      "edit": "Edit expense",
+      "create": "",
+      "edit": "",
       "TitleField": {
-        "label": "Expense title",
-        "placeholder": "Monday evening restaurant",
-        "description": "Enter a description for the expense."
+        "label": "Expense",
+        "placeholder": "Sento + Ramen di fiucia",
+        "description": ""
       },
       "DateField": {
         "label": "Expense date",
@@ -173,11 +173,11 @@
         "label": "Currency of expense",
         "description": "The currency in which the expense was paid."
       },
-      "categoryFieldDescription": "Select the expense category.",
+      "categoryFieldDescription": "",
       "paidByField": {
         "label": "Paid by",
         "placeholder": "Select a participant",
-        "description": "Select the participant who paid the expense."
+        "description": ""
       },
       "recurrenceRule": {
         "label": "Expense Recurrence",
@@ -190,9 +190,9 @@
       },
       "paidFor": {
         "title": "Paid for",
-        "description": "Select who the expense was paid for."
+        "description": ""
       },
-      "splitModeDescription": "Select how to split the expense.",
+      "splitModeDescription": "",
       "attachDescription": "See and attach receipts to the expense."
     },
     "amountField": {
@@ -236,8 +236,8 @@
       "label": "Split mode",
       "evenly": "Evenly",
       "byShares": "Unevenly – By shares",
-      "byPercentage": "Unevenly – By percentage",
-      "byAmount": "Unevenly – By amount",
+      "byPercentage": "Percentage",
+      "byAmount": "Amount",
       "saveAsDefault": "Save as default splitting options"
     },
     "DeletePopup": {

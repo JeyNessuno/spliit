@@ -12,6 +12,7 @@ import { trpc } from '@/trpc/client'
 import { AppRouterOutput } from '@/trpc/routers/_app'
 import { Loader2 } from 'lucide-react'
 import { useTranslations } from 'next-intl'
+import Image from 'next/image'
 import Link from 'next/link'
 import { PropsWithChildren, useEffect, useState } from 'react'
 import { RecentGroupListCard } from './recent-group-list-card'
@@ -224,6 +225,16 @@ function GroupsPage({
   const t = useTranslations('Groups')
   return (
     <>
+      <div className="flex justify-center pt-6 sm:pt-0">
+        <Image
+          src="/logo-with-text.png"
+          className="h-auto w-auto"
+          width={(35 * 522) / 180}
+          height={35}
+          alt="Spliit"
+          priority
+        />
+      </div>
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
         <h1 className="font-bold text-2xl flex-1">
           <Link href="/groups">{t('myGroups')}</Link>

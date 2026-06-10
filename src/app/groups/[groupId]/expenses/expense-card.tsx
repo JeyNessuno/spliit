@@ -64,7 +64,7 @@ export function ExpenseCard({
     <div
       key={expense.id}
       className={cn(
-        'flex justify-between sm:mx-6 px-4 sm:rounded-lg sm:pr-2 sm:pl-4 py-4 text-sm cursor-pointer hover:bg-accent gap-1 items-stretch',
+        'flex cursor-pointer items-stretch justify-between gap-3 border-t border-border/60 px-4 py-4 text-sm transition-colors hover:bg-accent/50 sm:px-5',
         expense.isReimbursement && 'italic',
       )}
       onClick={() => {
@@ -73,10 +73,15 @@ export function ExpenseCard({
     >
       <CategoryIcon
         category={expense.category}
-        className="w-4 h-4 mr-2 mt-0.5 text-muted-foreground"
+        className="mt-0.5 h-4 w-4 text-primary/80"
       />
-      <div className="flex-1">
-        <div className={cn('mb-1', expense.isReimbursement && 'italic')}>
+      <div className="min-w-0 flex-1">
+        <div
+          className={cn(
+            'mb-1 truncate font-medium',
+            expense.isReimbursement && 'italic',
+          )}
+        >
           {expense.title}
         </div>
         <div className="text-xs text-muted-foreground">
@@ -89,7 +94,7 @@ export function ExpenseCard({
       <div className="flex flex-col justify-between items-end">
         <div
           className={cn(
-            'tabular-nums whitespace-nowrap',
+            'tabular-nums whitespace-nowrap text-right',
             expense.isReimbursement ? 'italic' : 'font-bold',
           )}
         >

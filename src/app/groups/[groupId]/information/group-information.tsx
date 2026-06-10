@@ -20,7 +20,7 @@ export default function GroupInformation({ groupId }: { groupId: string }) {
 
   return (
     <>
-      <Card className="mb-4">
+      <Card>
         <CardHeader>
           <CardTitle className="flex justify-between">
             <span>{t('title')}</span>

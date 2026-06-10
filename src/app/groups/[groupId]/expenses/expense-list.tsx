@@ -162,7 +162,7 @@ const ExpenseListForSearch = ({
           <div key={expenseGroup}>
             <div
               className={
-                'text-muted-foreground text-xs pl-4 sm:pl-6 py-1 font-semibold sticky top-16 bg-white dark:bg-[#1b1917]'
+                'sticky top-[5.35rem] z-30 bg-background/95 px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground backdrop-blur-xl sm:px-5'
               }
             >
               {t(`Groups.${expenseGroup}`)}

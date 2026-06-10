@@ -49,16 +49,17 @@ import {
   amountAsMinorUnits,
   cn,
   formatCurrency,
+  formatDateOnly,
   getCurrencyFromGroup,
 } from '@/lib/utils'
 import { AppRouterOutput } from '@/trpc/routers/_app'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { RecurrenceRule } from '@prisma/client'
-import { ChevronRight, Save } from 'lucide-react'
+import { Calendar, ChevronRight, Save } from 'lucide-react'
 import { useLocale, useTranslations } from 'next-intl'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { match } from 'ts-pattern'
 import { DeletePopup } from '../../../../components/delete-popup'
@@ -270,6 +271,38 @@ export function ExpenseForm({
   })
   const [isCategoryLoading, setCategoryLoading] = useState(false)
   const activeUserId = useActiveUser(group.id)
+  const amountInputRef = useRef<HTMLInputElement | null>(null)
+  const dateInputRef = useRef<HTMLInputElement | null>(null)
+
+  useLayoutEffect(() => {
+    if (!isCreate) return
+
+    const input = amountInputRef.current
+    if (!input) return
+
+    let shouldRetry = false
+    try {
+      shouldRetry = !!sessionStorage.getItem('spliit.focusAmount')
+      if (shouldRetry) sessionStorage.removeItem('spliit.focusAmount')
+    } catch (e) {}
+
+    requestAnimationFrame(() => {
+      try {
+        input.focus({ preventScroll: true })
+        input.select()
+      } catch (e) {}
+
+      if (shouldRetry) {
+        // Some iOS contexts only open keyboard on a later focus attempt.
+        setTimeout(() => {
+          try {
+            input.focus()
+            input.select()
+          } catch (e) {}
+        }, 300)
+      }
+    })
+  }, [isCreate])
 
   const submit = async (values: ExpenseFormValues) => {
     await persistDefaultSplittingOptions(group.id, values)
@@ -477,12 +510,12 @@ export function ExpenseForm({
               {t(`${sExpense}.${isCreate ? 'create' : 'edit'}`)}
             </CardTitle>
           </CardHeader>
-          <CardContent className="grid sm:grid-cols-2 gap-6">
+          <CardContent className="grid gap-5 sm:grid-cols-2">
             <FormField
               control={form.control}
               name="title"
               render={({ field }) => (
-                <FormItem className="">
+                <FormItem>
                   <FormLabel>{t(`${sExpense}.TitleField.label`)}</FormLabel>
                   <FormControl>
                     <Input
@@ -514,22 +547,19 @@ export function ExpenseForm({
               control={form.control}
               name="expenseDate"
               render={({ field }) => (
-                <FormItem className="sm:order-1">
+                <FormItem className="sr-only">
                   <FormLabel>{t(`${sExpense}.DateField.label`)}</FormLabel>
                   <FormControl>
                     <Input
+                      ref={dateInputRef}
                       className="date-base"
                       type="date"
-                      defaultValue={formatDate(field.value)}
+                      value={formatDate(field.value)}
                       onChange={(event) => {
                         return field.onChange(new Date(event.target.value))
                       }}
                     />
                   </FormControl>
-                  <FormDescription>
-                    {t(`${sExpense}.DateField.description`)}
-                  </FormDescription>
-                  <FormMessage />
                 </FormItem>
               )}
             />
@@ -537,13 +567,14 @@ export function ExpenseForm({
             <FormField
               name="originalCurrency"
               render={({ field: { onChange, ...field } }) => (
-                <FormItem className="sm:order-3">
+                <FormItem className="sr-only">
                   <FormLabel>{t(`${sExpense}.currencyField.label`)}</FormLabel>
                   <FormControl>
                     {group.currencyCode ? (
                       <CurrencySelector
-                        currencies={defaultCurrencyList(locale, '')}
-                        defaultValue={form.watch(field.name) ?? ''}
+                        className="h-12 min-w-[7rem]"
+                        currencies={defaultCurrencyList(locale)}
+                        defaultValue={form.watch(field.name) ?? 'EUR'}
                         isLoading={false}
                         onValueChange={(v) => onChange(v)}
                       />
@@ -556,11 +587,6 @@ export function ExpenseForm({
                       />
                     )}
                   </FormControl>
-                  <FormDescription>
-                    {t(`${sExpense}.currencyField.description`)}{' '}
-                    {!group.currencyCode && t('conversionUnavailable')}
-                  </FormDescription>
-                  <FormMessage />
                 </FormItem>
               )}
             />
@@ -568,7 +594,7 @@ export function ExpenseForm({
             <div
               className={`sm:order-4 ${
                 !conversionRequired ? 'max-sm:hidden sm:invisible' : ''
-              } col-span-2 md:col-span-1 space-y-2`}
+              } col-span-2 space-y-2 md:col-span-1`}
             >
               <FormField
                 control={form.control}
@@ -580,7 +606,7 @@ export function ExpenseForm({
                       <span>{originalCurrency.symbol}</span>
                       <FormControl>
                         <Input
-                          className="text-base max-w-[120px]"
+                          className="max-w-[140px]"
                           type="text"
                           inputMode="decimal"
                           placeholder="0.00"
@@ -651,7 +677,7 @@ export function ExpenseForm({
                           </span>
                           <FormControl>
                             <Input
-                              className="text-base max-w-[120px]"
+                              className="max-w-[140px]"
                               type="text"
                               inputMode="decimal"
                               placeholder="0.00"
@@ -680,7 +706,7 @@ export function ExpenseForm({
               control={form.control}
               name="category"
               render={({ field }) => (
-                <FormItem className="order-3 sm:order-2">
+                <FormItem className="order-4 sm:order-2">
                   <FormLabel>{t('categoryField.label')}</FormLabel>
                   <CategorySelector
                     categories={categories}
@@ -701,17 +727,35 @@ export function ExpenseForm({
             <FormField
               control={form.control}
               name="amount"
-              render={({ field: { onChange, ...field } }) => (
-                <FormItem className="sm:order-5">
+              render={({ field: { onChange, ref: _formRef, ...field } }) => (
+                <FormItem className="sm:order-1 col-span-2">
                   <FormLabel>{t('amountField.label')}</FormLabel>
-                  <div className="flex items-baseline gap-2">
-                    <span>{group.currency}</span>
-                    <FormControl>
+                  <div className="flex items-center gap-2">
+                    {group.currencyCode ? (
+                      <CurrencySelector
+                        className="h-12 w-12 p-0"
+                        currencies={defaultCurrencyList(locale)}
+                        defaultValue={form.watch('originalCurrency') ?? group.currencyCode ?? 'EUR'}
+                        isLoading={false}
+                        flagOnly={true}
+                        onValueChange={(value) => {
+                          form.setValue('originalCurrency', value)
+                        }}
+                      />
+                    ) : (
+                      <span className="inline-flex h-12 items-center rounded-xl border border-border px-4 text-sm">
+                        {group.currency}
+                      </span>
+                    )}
+
+                    <FormControl className="flex-1">
                       <Input
-                        className="text-base max-w-[120px]"
-                        type="text"
+                        ref={amountInputRef}
+                        className="max-w-full"
+                        type="tel"
                         inputMode="decimal"
                         placeholder="0.00"
+                        autoFocus={isCreate}
                         onChange={(event) => {
                           const v = enforceCurrencyPattern(event.target.value)
                           const income = Number(v) < 0
@@ -720,37 +764,30 @@ export function ExpenseForm({
                           onChange(v)
                         }}
                         onFocus={(e) => {
-                          // we're adding a small delay to get around safaris issue with onMouseUp deselecting things again
                           const target = e.currentTarget
                           setTimeout(() => target.select(), 1)
                         }}
                         {...field}
                       />
                     </FormControl>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="h-12 w-12 p-0"
+                      onClick={() => {
+                        dateInputRef.current?.showPicker?.()
+                        dateInputRef.current?.focus()
+                      }}
+                    >
+                      <Calendar className="h-5 w-5" />
+                    </Button>
+                  </div>
+                  <div className="mt-2 text-sm text-muted-foreground">
+                    {formatDateOnly(form.watch('expenseDate'), locale, {
+                      dateStyle: 'medium',
+                    })}
                   </div>
                   <FormMessage />
-
-                  {!isIncome && (
-                    <FormField
-                      control={form.control}
-                      name="isReimbursement"
-                      render={({ field }) => (
-                        <FormItem className="flex flex-row gap-2 items-center space-y-0 pt-2">
-                          <FormControl>
-                            <Checkbox
-                              checked={field.value}
-                              onCheckedChange={field.onChange}
-                            />
-                          </FormControl>
-                          <div>
-                            <FormLabel>
-                              {t('isReimbursementField.label')}
-                            </FormLabel>
-                          </div>
-                        </FormItem>
-                      )}
-                    />
-                  )}
                 </FormItem>
               )}
             />
@@ -774,6 +811,7 @@ export function ExpenseForm({
                       {group.participants.map(({ id, name }) => (
                         <SelectItem key={id} value={id}>
                           {name}
+                          {activeUserId === id && ' (you)'}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -797,47 +835,11 @@ export function ExpenseForm({
                 </FormItem>
               )}
             />
-            <FormField
-              control={form.control}
-              name="recurrenceRule"
-              render={({ field }) => (
-                <FormItem className="sm:order-5">
-                  <FormLabel>{t(`${sExpense}.recurrenceRule.label`)}</FormLabel>
-                  <Select
-                    onValueChange={(value) => {
-                      form.setValue('recurrenceRule', value as RecurrenceRule)
-                    }}
-                    defaultValue={getSelectedRecurrenceRule(field)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="NONE" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="NONE">
-                        {t(`${sExpense}.recurrenceRule.none`)}
-                      </SelectItem>
-                      <SelectItem value="DAILY">
-                        {t(`${sExpense}.recurrenceRule.daily`)}
-                      </SelectItem>
-                      <SelectItem value="WEEKLY">
-                        {t(`${sExpense}.recurrenceRule.weekly`)}
-                      </SelectItem>
-                      <SelectItem value="MONTHLY">
-                        {t(`${sExpense}.recurrenceRule.monthly`)}
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormDescription>
-                    {t(`${sExpense}.recurrenceRule.description`)}
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+
           </CardContent>
         </Card>
 
-        <Card className="mt-4">
+        <Card>
           <CardHeader>
             <CardTitle className="flex justify-between">
               <span>{t(`${sExpense}.paidFor.title`)}</span>
@@ -893,7 +895,7 @@ export function ExpenseForm({
                             data-id={`${id}/${form.getValues().splitMode}/${
                               group.currency
                             }`}
-                            className="flex flex-wrap gap-y-4 items-center border-t last-of-type:border-b last-of-type:!mb-4 -mx-6 px-6 py-3"
+                            className="-mx-4 flex flex-wrap items-center gap-y-4 border-t border-border/70 px-4 py-4 last-of-type:border-b sm:-mx-5 sm:px-5"
                           >
                             <FormItem className="flex-1 flex flex-row items-start space-x-3 space-y-0">
                               <FormControl>
@@ -931,6 +933,7 @@ export function ExpenseForm({
                               </FormControl>
                               <FormLabel className="text-sm font-normal flex-1">
                                 {name}
+                                {activeUserId === id && ' (you)'}
                                 {field.value?.some(
                                   ({ participant }) => participant === id,
                                 ) &&
@@ -1009,7 +1012,7 @@ export function ExpenseForm({
                                                       participant === id,
                                                   ),
                                                 )}
-                                                className="text-base w-[80px] -my-2"
+                                                className="-my-2 w-[88px]"
                                                 type="text"
                                                 inputMode="decimal"
                                                 disabled={
@@ -1117,7 +1120,7 @@ export function ExpenseForm({
                                                     participant === id,
                                                 ),
                                               )}
-                                              className="text-base w-[80px] -my-2"
+                                              className="-my-2 w-[88px]"
                                               type="text"
                                               disabled={
                                                 !field.value?.some(
@@ -1190,86 +1193,50 @@ export function ExpenseForm({
               )}
             />
 
-            <Collapsible
-              className="mt-5"
-              defaultOpen={form.getValues().splitMode !== 'EVENLY'}
-            >
-              <CollapsibleTrigger asChild>
-                <Button variant="link" className="-mx-4">
-                  {t('advancedOptions')}
-                </Button>
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-                <div className="grid sm:grid-cols-2 gap-6 pt-3">
-                  <FormField
-                    control={form.control}
-                    name="splitMode"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>{t('SplitModeField.label')}</FormLabel>
-                        <FormControl>
-                          <Select
-                            onValueChange={(value) => {
-                              form.setValue('splitMode', value as any, {
-                                shouldDirty: true,
-                                shouldTouch: true,
-                                shouldValidate: true,
-                              })
-                            }}
-                            defaultValue={field.value}
-                          >
-                            <SelectTrigger>
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="EVENLY">
-                                {t('SplitModeField.evenly')}
-                              </SelectItem>
-                              <SelectItem value="BY_SHARES">
-                                {t('SplitModeField.byShares')}
-                              </SelectItem>
-                              <SelectItem value="BY_PERCENTAGE">
-                                {t('SplitModeField.byPercentage')}
-                              </SelectItem>
-                              <SelectItem value="BY_AMOUNT">
-                                {t('SplitModeField.byAmount')}
-                              </SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </FormControl>
-                        <FormDescription>
-                          {t(`${sExpense}.splitModeDescription`)}
-                        </FormDescription>
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="saveDefaultSplittingOptions"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-row gap-2 items-center space-y-0 pt-2">
-                        <FormControl>
-                          <Checkbox
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                          />
-                        </FormControl>
-                        <div>
-                          <FormLabel>
-                            {t('SplitModeField.saveAsDefault')}
-                          </FormLabel>
-                        </div>
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </CollapsibleContent>
-            </Collapsible>
+            <FormField
+              control={form.control}
+              name="splitMode"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t('SplitModeField.label')}</FormLabel>
+                  <FormControl>
+                    <Select
+                      onValueChange={(value) => {
+                        form.setValue('splitMode', value as any, {
+                          shouldDirty: true,
+                          shouldTouch: true,
+                          shouldValidate: true,
+                        })
+                      }}
+                      defaultValue={field.value}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="EVENLY">
+                          {t('SplitModeField.evenly')}
+                        </SelectItem>
+                        <SelectItem value="BY_PERCENTAGE">
+                          {t('SplitModeField.byPercentage')}
+                        </SelectItem>
+                        <SelectItem value="BY_AMOUNT">
+                          {t('SplitModeField.byAmount')}
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </FormControl>
+                  <FormDescription>
+                    {t(`${sExpense}.splitModeDescription`)}
+                  </FormDescription>
+                </FormItem>
+              )}
+            />
           </CardContent>
         </Card>
 
         {runtimeFeatureFlags.enableExpenseDocuments && (
-          <Card className="mt-4">
+          <Card>
             <CardHeader>
               <CardTitle className="flex justify-between">
                 <span>{t('attachDocuments')}</span>
@@ -1293,8 +1260,11 @@ export function ExpenseForm({
           </Card>
         )}
 
-        <div className="flex mt-4 gap-2">
-          <SubmitButton loadingContent={t(isCreate ? 'creating' : 'saving')}>
+        <div className="sticky bottom-0 z-40 -mx-0 mt-0 flex gap-2 border-t border-border/70 bg-background/95 p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] backdrop-blur-xl sm:rounded-b-2xl sm:border-x">
+          <SubmitButton
+            className="flex-1"
+            loadingContent={t(isCreate ? 'creating' : 'saving')}
+          >
             <Save className="w-4 h-4 mr-2" />
             {t(isCreate ? 'create' : 'save')}
           </SubmitButton>
@@ -1303,7 +1273,7 @@ export function ExpenseForm({
               onDelete={() => onDelete(activeUserId ?? undefined)}
             ></DeletePopup>
           )}
-          <Button variant="ghost" asChild>
+          <Button variant="ghost" asChild className="flex-1">
             <Link href={`/groups/${group.id}`}>{t('cancel')}</Link>
           </Button>
         </div>

@@ -122,7 +122,7 @@ export function ActivityList() {
           <div key={dateGroup}>
             <div
               className={
-                'text-muted-foreground text-xs py-1 font-semibold sticky top-16 bg-white dark:bg-[#1b1917]'
+                'sticky top-[5.35rem] z-30 bg-background/95 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground backdrop-blur-xl'
               }
             >
               {t(`Groups.${dateGroup}`)}

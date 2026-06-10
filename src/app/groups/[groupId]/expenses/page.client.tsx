@@ -1,5 +1,6 @@
 'use client'
 
+import BalancesAndReimbursements from '@/app/groups/[groupId]/balances/balances-and-reimbursements'
 import { ActiveUserModal } from '@/app/groups/[groupId]/expenses/active-user-modal'
 import { CreateFromReceiptButton } from '@/app/groups/[groupId]/expenses/create-from-receipt-button'
 import { ExpenseList } from '@/app/groups/[groupId]/expenses/expense-list'
@@ -34,19 +35,24 @@ export default function GroupExpensesPageClient({
 
   return (
     <>
-      <Card className="mb-4 rounded-none -mx-4 border-x-0 sm:border-x sm:rounded-lg sm:mx-0">
-        <div className="flex flex-1">
-          <CardHeader className="flex-1 p-4 sm:p-6">
+      <Card>
+        <div className="flex flex-1 items-start">
+          <CardHeader className="flex-1">
             <CardTitle>{t('title')}</CardTitle>
             <CardDescription>{t('description')}</CardDescription>
           </CardHeader>
-          <CardHeader className="p-4 sm:p-6 flex flex-row space-y-0 gap-2">
+          <CardHeader className="flex flex-row gap-2 space-y-0">
             <ExportButton groupId={groupId} />
             {enableReceiptExtract && <CreateFromReceiptButton />}
-            <Button asChild size="icon">
+            <Button asChild size="icon" className="hidden sm:inline-flex">
               <Link
                 href={`/groups/${groupId}/expenses/create`}
                 title={t('create')}
+                onClick={() => {
+                  try {
+                    sessionStorage.setItem('spliit.focusAmount', '1')
+                  } catch (e) {}
+                }}
               >
                 <Plus className="w-4 h-4" />
               </Link>
@@ -58,6 +64,24 @@ export default function GroupExpensesPageClient({
           <ExpenseList />
         </CardContent>
       </Card>
+
+      <BalancesAndReimbursements />
+
+      <div className="fixed inset-x-0 bottom-0 z-50 border-t border-border/70 bg-background/95 p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] backdrop-blur-xl sm:hidden">
+        <Button asChild className="w-full">
+          <Link
+            href={`/groups/${groupId}/expenses/create`}
+            onClick={() => {
+              try {
+                sessionStorage.setItem('spliit.focusAmount', '1')
+              } catch (e) {}
+            }}
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            {t('create')}
+          </Link>
+        </Button>
+      </div>
 
       <ActiveUserModal groupId={groupId} />
     </>
