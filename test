@@ -1,1 +1,43 @@
-im testing git stuff
+HOW TO RESTART
+
+Cmd + Space → Docker
+
+Wait until whale icon is steady, says “Running”
+
+cd /Users/jey/spliit/spliit
+./scripts/start-local-db.sh
+npm run dev
+
+Go to: http://localhost:3000
+
+
+
+
+
+
+
+
+HOW TO DELETE
+
+How to clean everything later (important)
+
+When you’re done with the project, you can fully wipe it like this:
+
+1. Delete project
+rm -rf /Users/jey/spliit
+2. Stop and remove Docker containers
+docker stop spliit-db
+docker rm spliit-db
+3. Remove Docker images + volumes (optional but frees a LOT)
+
+⚠️ This wipes ALL local Docker projects, not just Spliit:
+
+docker system prune -a --volumes
+4. If you want maximum cleanup (rarely needed)
+
+Quit Docker Desktop and delete:
+
+~/Library/Containers/com.docker.docker
+
+This alone can free multiple GBs.
+

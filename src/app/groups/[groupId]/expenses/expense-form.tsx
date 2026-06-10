@@ -323,9 +323,11 @@ export function ExpenseForm({
   useEffect(() => {
     const splitMode = form.getValues().splitMode
 
-    // Only auto-balance for split mode 'Unevenly - By amount'
+    // Auto-balance for split modes where a remaining value can be derived.
+    // By amount: distribute the remaining amount over unedited participants.
+    // By percentage: calculate the last participant's percentage once all others are entered.
     if (
-      splitMode === 'BY_AMOUNT' &&
+      (splitMode === 'BY_AMOUNT' || splitMode === 'BY_PERCENTAGE') &&
       (form.getFieldState('paidFor').isDirty ||
         form.getFieldState('amount').isDirty)
     ) {
@@ -348,24 +350,51 @@ export function ExpenseForm({
         return participant
       })
 
-      if (remainingParticipants > 0) {
-        let amountPerRemaining = 0
-        if (splitMode === 'BY_AMOUNT') {
-          amountPerRemaining = remainingAmount / remainingParticipants
-        }
+      if (splitMode === 'BY_AMOUNT') {
+        if (remainingParticipants > 0) {
+          const amountPerRemaining = remainingAmount / remainingParticipants
 
-        newPaidFor = newPaidFor.map((participant) => {
-          if (!editedParticipants.includes(participant.participant)) {
-            return {
-              ...participant,
-              shares: amountPerRemaining.toFixed(
-                groupCurrency.decimal_digits,
-              ) as any, // Keep as string for consistent schema handling
+          newPaidFor = newPaidFor.map((participant) => {
+            if (!editedParticipants.includes(participant.participant)) {
+              return {
+                ...participant,
+                shares: amountPerRemaining.toFixed(
+                  groupCurrency.decimal_digits,
+                ) as any,
+              }
             }
-          }
-          return participant
-        })
+            return participant
+          })
+        }
       }
+
+      if (splitMode === 'BY_PERCENTAGE') {
+        const remainingParticipantsList = newPaidFor.filter(
+          ({ participant }) => !editedParticipants.includes(participant),
+        )
+
+        if (remainingParticipantsList.length === 1) {
+          const editedSum = newPaidFor.reduce((sum, participant) => {
+            if (editedParticipants.includes(participant.participant)) {
+              return sum + (Number(participant.shares) || 0)
+            }
+            return sum
+          }, 0)
+
+          const remainingPercentage = Math.max(0, 100 - editedSum)
+
+          newPaidFor = newPaidFor.map((participant) => {
+            if (!editedParticipants.includes(participant.participant)) {
+              return {
+                ...participant,
+                shares: remainingPercentage.toFixed(0) as any,
+              }
+            }
+            return participant
+          })
+        }
+      }
+
       form.setValue('paidFor', newPaidFor, { shouldValidate: true })
     }
   }, [
