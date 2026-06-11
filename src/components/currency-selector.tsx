@@ -16,11 +16,8 @@ import {
 } from '@/components/ui/popover'
 import { Currency } from '@/lib/currency'
 import { useMediaQuery } from '@/lib/hooks'
-import { useTranslations } from 'next-intl'
-import { forwardRef, useEffect, useState } from 'react'
-
 type Props = {
-  currencies: Currency[]
+  currencies: Currency[]  
   onValueChange: (currencyCode: Currency['code']) => void
   /** Currency code to be selected by default. Overwriting this value will update current selection, too. */
   defaultValue: Currency['code']

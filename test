@@ -6,6 +6,10 @@ Wait until whale icon is steady, says “Running”
 
 cd /Users/jey/spliit/spliit
 ./scripts/start-local-db.sh
+
+if errors, still running but paused,
+docker start spliit-db
+
 npm run dev
 
 Go to: http://localhost:3000

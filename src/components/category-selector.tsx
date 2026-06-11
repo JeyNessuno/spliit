@@ -119,18 +119,16 @@ function CategoryCommand({
           ([group, groupCategories], index) => (
             <CommandGroup key={index} heading={t(`${group}.heading`)}>
               {groupCategories.map((category) => (
-                <CommandItem
-                  key={category.id}
-                  value={`${category.id} ${t(
-                    `${category.grouping}.heading`,
-                  )} ${t(`${category.grouping}.${category.name}`)}`}
-                  onSelect={(currentValue) => {
-                    const id = Number(currentValue.split(' ')[0])
-                    onValueChange(id)
-                  }}
+                <div
+                  className="flex items-center px-2 py-2 rounded-md active:bg-gray-100"
+                  onPointerDown={(e) => {
+                    e.preventDefault()
+                    onValueChange(category.id)
+                    requestAnimationFrame(() => setOpen(false))
+                 }}
                 >
                   <CategoryLabel category={category} />
-                </CommandItem>
+                </div>
               ))}
             </CommandGroup>
           ),

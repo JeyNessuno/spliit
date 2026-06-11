@@ -407,24 +407,26 @@ function ParticipantSelector({
     participants.find((participant) => participant.name === value) ?? participants[0]
 
   const selectorContent = (
-    <Command>
-      <CommandInput placeholder="Search participants" className="text-base" />
-      <CommandEmpty>No participants found</CommandEmpty>
-      {participants.map((participant) => (
-        <CommandItem
-          key={participant.name}
-          value={participant.name}
-          onSelect={() => {
-            setValue(participant.name)
-            onValueChange(participant.name)
-            setOpen(false)
-          }}
-        >
-          {participant.name}
-        </CommandItem>
-      ))}
-    </Command>
-  )
+  <Command>
+    <CommandInput placeholder="Search participants" className="text-base" />
+    <CommandEmpty>No participants found</CommandEmpty>
+
+    {participants.map((participant) => (
+      <CommandItem
+        key={participant.name}
+        value={participant.name}
+        onPointerDown={(e) => {
+          e.preventDefault()
+          setValue(participant.name)
+          onValueChange(participant.name)
+          requestAnimationFrame(() => setOpen(false))
+        }}
+      >
+        {participant.name}
+      </CommandItem>
+    ))}
+  </Command>
+)
 
   return isDesktop ? (
     <Popover open={open} onOpenChange={setOpen}>
