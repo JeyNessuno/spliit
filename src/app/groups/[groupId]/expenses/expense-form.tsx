@@ -675,25 +675,23 @@ export function ExpenseForm({
                           <span>
                             {originalCurrency.symbol} 1 = {group.currency}
                           </span>
-                          <FormControl>
-                            <Input
-                              className="max-w-[140px]"
-                              type="text"
-                              inputMode="decimal"
-                              placeholder="0.00"
-                              onChange={(event) => {
-                                const v = enforceCurrencyPattern(
-                                  event.target.value,
-                                )
-                                onChange(v)
-                              }}
-                              {...field}
-                              onFocus={(e) => {
-                                const target = e.currentTarget
-                                setTimeout(() => target.select(), 1)
-                              }}
-                            />
-                          </FormControl>
+                            <FormControl>
+                              <Input
+                                className="max-w-[140px]"
+                                type="text"
+                                inputMode="decimal"
+                                placeholder="0.00"
+                                {...field}
+                                onChange={(event) => {
+                                  const v = enforceCurrencyPattern(event.target.value)
+                                  onChange(v)
+                                }}
+                                onFocus={(e) => {
+                                  const target = e.currentTarget
+                                  setTimeout(() => target.select(), 1)
+                                }}
+                              />
+                            </FormControl>
                         </div>
                         <FormMessage />
                       </FormItem>

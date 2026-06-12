@@ -1,6 +1,8 @@
 import { ChevronDown, Loader2 } from 'lucide-react'
-
+import { forwardRef } from 'react';
+import { useState, useEffect } from 'react';
 import { Button, ButtonProps } from '@/components/ui/button'
+import { useTranslations } from 'next-intl'
 import {
   Command,
   CommandEmpty,
@@ -90,11 +92,11 @@ export function CurrencySelector({
       <DrawerContent className="p-0">
         <CurrencyCommand
           currencies={currencies}
-          onValueChange={(id) => {
-            setValue(id)
-            onValueChange(id)
-            setOpen(false)
-          }}
+          onValueChange={(code) => {
+          setValue(code)
+          onValueChange(code)
+          setOpen(false)
+        }}  
         />
       </DrawerContent>
     </Drawer>
