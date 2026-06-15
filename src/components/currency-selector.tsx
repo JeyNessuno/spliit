@@ -16,10 +16,11 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover'
+import { cn } from '@/lib/utils'
 import { Currency } from '@/lib/currency'
 import { useMediaQuery } from '@/lib/hooks'
 type Props = {
-  currencies: Currency[]  
+  currencies: Currency[]
   onValueChange: (currencyCode: Currency['code']) => void
   /** Currency code to be selected by default. Overwriting this value will update current selection, too. */
   defaultValue: Currency['code']
@@ -27,6 +28,8 @@ type Props = {
   className?: string
   /** Show only the flag, hide currency name and code */
   flagOnly?: boolean
+  /** Disable the selector so user cannot change selection */
+  disabled?: boolean
 }
 
 export function CurrencySelector({
@@ -36,6 +39,7 @@ export function CurrencySelector({
   isLoading,
   className,
   flagOnly,
+  disabled,
 }: Props) {
   const [open, setOpen] = useState(false)
   const [value, setValue] = useState<string>(defaultValue)
@@ -54,7 +58,7 @@ export function CurrencySelector({
 
   if (isDesktop) {
     return (
-      <Popover open={open} onOpenChange={setOpen}>
+      <Popover open={disabled ? false : open} onOpenChange={disabled ? undefined : setOpen}>
         <PopoverTrigger asChild>
           <CurrencyButton
             className={className}
@@ -62,6 +66,7 @@ export function CurrencySelector({
             open={open}
             isLoading={isLoading}
             flagOnly={flagOnly}
+            disabled={disabled}
           />
         </PopoverTrigger>
         <PopoverContent className="p-0" align="start">
@@ -79,7 +84,7 @@ export function CurrencySelector({
   }
 
   return (
-    <Drawer open={open} onOpenChange={setOpen}>
+    <Drawer open={disabled ? false : open} onOpenChange={disabled ? undefined : setOpen}>
       <DrawerTrigger asChild>
         <CurrencyButton
           className={className}
@@ -87,6 +92,7 @@ export function CurrencySelector({
           open={open}
           isLoading={isLoading}
           flagOnly={flagOnly}
+          disabled={disabled}
         />
       </DrawerTrigger>
       <DrawerContent className="p-0">
@@ -164,11 +170,13 @@ type CurrencyButtonProps = {
   currency: Currency
   open: boolean
   isLoading: boolean
+  className?: string
   flagOnly?: boolean
+  disabled?: boolean
 }
 const CurrencyButton = forwardRef<HTMLButtonElement, CurrencyButtonProps>(
   (
-    { currency, open, isLoading, flagOnly, ...props }: ButtonProps & CurrencyButtonProps,
+    { currency, open, isLoading, flagOnly, disabled, className, ...props }: ButtonProps & CurrencyButtonProps,
     ref,
   ) => {
     const iconClassName = 'ml-2 h-4 w-4 shrink-0 opacity-50'
@@ -177,8 +185,12 @@ const CurrencyButton = forwardRef<HTMLButtonElement, CurrencyButtonProps>(
         variant="outline"
         role="combobox"
         aria-expanded={open}
-        className={flagOnly ? 'h-12 w-12 p-0' : 'flex w-full justify-between'}
+        className={cn(
+          flagOnly ? 'h-12 w-12 p-0' : 'flex w-full justify-between',
+          className,
+        )}
         ref={ref}
+        disabled={disabled}
         {...props}
       >
         <CurrencyLabel currency={currency} flagOnly={flagOnly} />

@@ -124,8 +124,7 @@ function CategoryCommand({
                   onPointerDown={(e) => {
                     e.preventDefault()
                     onValueChange(category.id)
-                    requestAnimationFrame(() => setOpen(false))
-                 }}
+                  }}
                 >
                   <CategoryLabel category={category} />
                 </div>

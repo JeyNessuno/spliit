@@ -55,7 +55,7 @@ export function useBaseUrl() {
  * @returns The active user, or `null` until it is fetched from local storage
  */
 export function useActiveUser(groupId?: string) {
-  const [activeUser, setActiveUser] = useState<string | null>(null)
+  const [activeUser, setActiveUser] = useState<string | undefined>(undefined)
 
   useEffect(() => {
     if (groupId) {
